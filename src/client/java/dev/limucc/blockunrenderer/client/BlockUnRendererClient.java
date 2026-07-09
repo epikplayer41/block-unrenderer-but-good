@@ -84,8 +84,8 @@ public class BlockUnRendererClient implements ClientModInitializer {
 
             // Open the GUI with the dedicated key
             while (OPEN_KEY.consumeClick()) {
-                if (mc.screen == null) {
-                    mc.setScreen(new BlockManagerScreen(null));
+                if (mc.gui.screen() == null) {
+                    mc.gui.setScreen(new BlockManagerScreen(null));
                 }
             }
         });

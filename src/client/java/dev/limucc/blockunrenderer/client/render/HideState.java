@@ -175,8 +175,8 @@ public final class HideState {
 
     private static void triggerChunkReload() {
         Minecraft mc = Minecraft.getInstance();
-        if (mc != null && mc.levelRenderer != null && mc.level != null) {
-            mc.execute(() -> mc.levelRenderer.allChanged());
+        if (mc != null && mc.levelExtractor != null && mc.level != null) {
+            mc.execute(() -> mc.levelExtractor.allChanged());
         }
     }
 }
