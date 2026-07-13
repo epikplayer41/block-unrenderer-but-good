@@ -4,6 +4,11 @@ A lightweight, **Sodium-compatible** Fabric client mod for **Minecraft 26.1.2** 
 hides chosen blocks, block entities, liquids and entities — with a keybind, no world reload, and
 near-zero performance cost.
 
+<p align="center">
+  <img src="https://cdn.modrinth.com/data/9fQJdnIj/images/0edc3075d77a455947826890b76ef9de600efcdf.png" alt="Before: normal world view" width="49%" />
+  <img src="https://cdn.modrinth.com/data/9fQJdnIj/images/e58b4580ce4636040f680e3e7036b80eaf35bf16.png" alt="After: listed blocks hidden" width="49%" />
+</p>
+
 ## Features
 
 - **Two filter modes** — *Hide listed* (blacklist) to make some blocks invisible, or *Show only
@@ -79,3 +84,9 @@ the real (unhidden) world, so hidden blocks stay on the map even though they're 
 ## Credits
 
 Built by [Limucc-dev](https://github.com/dev-limucc).
+
+## Gallery
+
+<p align="center">
+  <img src="https://cdn.modrinth.com/data/9fQJdnIj/images/0f08a8b6c632a7a7d6a7e438c1fd27b4778ded58.png" alt="In-game GUI — searchable block & liquid picker" width="70%" />
+</p>
