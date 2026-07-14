@@ -1,5 +1,7 @@
 # Block UN-renderer
 
+[![build](https://github.com/dev-limucc/block-unrenderer/actions/workflows/build.yml/badge.svg)](https://github.com/dev-limucc/block-unrenderer/actions/workflows/build.yml)
+
 A lightweight, **Sodium-compatible** Fabric client mod for **Minecraft 26.1.2** that instantly
 hides chosen blocks, block entities, liquids and entities — with a keybind, no world reload, and
 near-zero performance cost.
