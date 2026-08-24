@@ -28,19 +28,10 @@ public final class HideState {
 
     private static volatile boolean active = false;
 
-    /**
-     * Server-side opt-in gate (Modrinth Content Rules section 3 — x-ray / seeing through opaque
-     * blocks requires a server opt-in). True in singleplayer, or in multiplayer only after the
-     * server sends an opt-in handshake. While this is false every hide decision below
-     * short-circuits to "don't hide", so the feature is completely inert on servers that have
-     * not opted in — no render path can hide anything.
-     */
-    private static volatile boolean allowed = false;
-
     private static volatile Set<Block> listed = new HashSet<>();
     private static volatile Set<Fluid> listedFluids = new HashSet<>();
-    private static volatile boolean hasFluids = false;           // skip fluid mixin work when no fluids listed
-    private static volatile boolean listEmpty = true;            // for SHOW_ONLY fast-path / light gating
+    private static volatile boolean hasFluids = false;
+    private static volatile boolean listEmpty = true;
     private static volatile ModConfig.FilterMode mode = ModConfig.FilterMode.HIDE_LISTED;
 
     // Mirror of config flags, refreshed in rebuildFromConfig() so the hot path never calls
@@ -52,7 +43,7 @@ public final class HideState {
 
     // ── Map-mod guard ─────────────────────────────────────────────────────────
     // Xaero's Minimap / World Map sample world block states directly (on their own worker
-    // threads, and sometimes the render thread). While they sample, we report the *vanilla*
+    // threads, and sometimes the render thread). While they sample, we report the vanilla
     // world so the map isn't distorted.
     //   • An explicit re-entrant counter is pushed/popped by the @Pseudo soft-mixin.
     //   • A thread-name check is the zero-dependency fallback. We cache it per-thread (the name
@@ -64,55 +55,62 @@ public final class HideState {
         return n != null && (n.contains("Xaero") || n.contains("xaero"));
     });
 
-    public static void pushMapSampling() { MAP_DEPTH.get()[0]++; }
-    public static void popMapSampling()  { int[] c = MAP_DEPTH.get(); if (c[0] > 0) c[0]--; }
+    public static void pushMapSampling() {
+        MAP_DEPTH.get()[0]++;
+    }
+
+    public static void popMapSampling() {
+        int[] c = MAP_DEPTH.get();
+        if (c[0] > 0) c[0]--;
+    }
 
     public static boolean isMapSampling() {
         return MAP_THREAD.get() || MAP_DEPTH.get()[0] > 0;
     }
 
     // ── Hot path (mixins) ─────────────────────────────────────────────────────
-    // Each begins with the `active` + `allowed` volatile reads; when off (or not opted in) the
-    // JIT collapses this to a predictable-branch no-op with zero allocation.
 
     public static boolean shouldHide(Block block) {
-        if (!active || !allowed) return false;
+        if (!active) return false;
         if (isMapSampling()) return false;
         return targeted(block);
     }
 
     /** Hide a liquid (water/lava/modded). Matched by Fluid (covers waterlogged + flowing). */
     public static boolean shouldHideFluid(Fluid fluid) {
-        if (!active || !allowed) return false;
+        if (!active) return false;
         if (isMapSampling()) return false;
+
         // "Hide liquids" toggle hides every fluid regardless of the list.
         if (cfgHideLiquids) return true;
         if (!hasFluids && mode == ModConfig.FilterMode.HIDE_LISTED) return false;
+
         boolean inList = listedFluids.contains(fluid);
         return (mode == ModConfig.FilterMode.SHOW_ONLY_LISTED) ? !inList : inList;
     }
 
     /** Hide all entities while active (independent of the block list). */
     public static boolean shouldHideEntities() {
-        return active && allowed && cfgHideEntities && !isMapSampling();
+        return active && cfgHideEntities && !isMapSampling();
     }
 
     public static boolean shouldShowUnder(Block block) {
-        if (!active || !allowed || !cfgShowUnder) return false;
+        if (!active || !cfgShowUnder) return false;
         if (isMapSampling()) return false;
         return targeted(block);
     }
 
     /** Let skylight pass through this hidden block (when FULLBRIGHT is on). */
     public static boolean shouldPassLight(Block block) {
-        if (!active || !allowed || !cfgLightFullbright) return false;
+        if (!active || !cfgLightFullbright) return false;
         if (isMapSampling()) return false;
         return targeted(block);
     }
 
     /** True if a lighting boost should be applied now (read by the luminance mixin). */
     public static boolean isLightActive() {
-        if (!active || !allowed || !cfgLightFullbright) return false;
+        if (!active || !cfgLightFullbright) return false;
+
         // In SHOW_ONLY mode "the list" being empty still hides the whole world, so light is relevant.
         return !listEmpty || mode == ModConfig.FilterMode.SHOW_ONLY_LISTED;
     }
@@ -122,29 +120,19 @@ public final class HideState {
         return (mode == ModConfig.FilterMode.SHOW_ONLY_LISTED) ? !inList : inList;
     }
 
-    public static boolean isFullbright() { return cfgLightFullbright; }
+    public static boolean isFullbright() {
+        return cfgLightFullbright;
+    }
 
-    public static boolean isActive() { return active; }
-
-    /** Whether the see-through feature is permitted right now (singleplayer, or server opted in). */
-    public static boolean isAllowed() { return allowed; }
+    public static boolean isActive() {
+        return active;
+    }
 
     // ── State changes ─────────────────────────────────────────────────────────
 
     public static void setActive(boolean value) {
         if (value == active) return;
         active = value;
-        triggerChunkReload();
-    }
-
-    /**
-     * Server-side opt-in gate. Set true in singleplayer, or when the server sends the opt-in
-     * handshake; false on multiplayer servers that have not opted in, and on disconnect.
-     * A change re-meshes loaded chunks so the view updates immediately.
-     */
-    public static void setAllowed(boolean value) {
-        if (value == allowed) return;
-        allowed = value;
         triggerChunkReload();
     }
 
@@ -158,23 +146,30 @@ public final class HideState {
 
         Set<Block> nextBlocks = new HashSet<>();
         Set<Fluid> nextFluids = new HashSet<>();
+
         for (String id : cfg.hiddenBlocks) {
             if (id == null || id.isBlank()) continue;
+
             Identifier rl = Identifier.tryParse(id.trim());
             if (rl == null) continue;
+
             BuiltInRegistries.BLOCK.getOptional(rl).ifPresent(nextBlocks::add);
+
             // A liquid is listed by its block ID (minecraft:water/lava); map to its Fluid too.
             BuiltInRegistries.FLUID.getOptional(rl).ifPresent(nextFluids::add);
         }
+
         listed = nextBlocks;
         listedFluids = nextFluids;
         hasFluids = !nextFluids.isEmpty();
         listEmpty = nextBlocks.isEmpty() && nextFluids.isEmpty();
+
         if (active) triggerChunkReload();
     }
 
     private static void triggerChunkReload() {
         Minecraft mc = Minecraft.getInstance();
+
         if (mc != null && mc.levelExtractor != null && mc.level != null) {
             mc.execute(() -> mc.levelExtractor.allChanged());
         }
