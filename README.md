@@ -1,8 +1,8 @@
-# Block UN-renderer
+# Block UN-renderer (but good)
 
 [![build](https://github.com/dev-limucc/block-unrenderer/actions/workflows/build.yml/badge.svg)](https://github.com/dev-limucc/block-unrenderer/actions/workflows/build.yml)
 
-A lightweight, **Sodium-compatible** Fabric client mod for **Minecraft 26.1.2** that instantly
+A lightweight, **Sodium-compatible** Fabric client mod for **Minecraft 26.2** that instantly
 hides chosen blocks, block entities, liquids and entities — with a keybind, no world reload, and
 near-zero performance cost.
 
@@ -41,10 +41,9 @@ near-zero performance cost.
 
 | | |
 |---|---|
-| Minecraft | 26.1.2 |
+| Minecraft | 26.2 |
 | Fabric Loader | 0.19.2+ |
-| Fabric API | * |
-| ModMenu | 18.x — optional (in-game config UI) |
+| Fabric API |
 
 ## Usage
 
@@ -56,18 +55,11 @@ near-zero performance cost.
 
 ## Multiplayer & servers (see-through opt-in)
 
-Because hiding blocks lets you see through them, the feature follows **[Modrinth's content
-rules](https://modrinth.com/legal/rules)**: it is only active where it can't be an unfair
-multiplayer advantage.
+haha hell nah! just see da blcoks brooooo
 
 - **Singleplayer / your own world** — always available.
-- **Multiplayer** — **off by default**, and only enabled if the **server opts in**.
+- **Multiplayer** — **ON by default** - always avaible
 
-A server opts in by installing this mod on the **server** side and setting `allowSeeThrough` to
-`true` in `config/block-unrenderer-server.json` (created automatically, default `false`). When
-enabled, the server sends a small opt-in handshake to clients on join and the feature unlocks for
-them. On vanilla servers — or any server that hasn't opted in — the feature stays disabled, and
-pressing the toggle there just shows a *"disabled — the server has not opted in"* message.
 
 This is purely a visual client mod: it never changes the world or block data on the server.
 
